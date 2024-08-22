@@ -1,0 +1,28 @@
+/* scanf:ingreso de valores
+
+ PUNTEROS: es una variable que almacena una direccion de memoria 
+
+
+Seminario2:
+Structs , Unions and   Bitfields 
+
+Structs(structured data types) : permite juntar diferentes tipos de datos 
+        typedef struct cell_phone
+        {
+             data 
+            int cell_no;
+            const char *wallpaper;
+        
+        
+
+        phone p = {298, "wallpaper"}; 
+        
+        
+
+ Uniones:usa el espacio para almacenar cualquier tipo de datos. Almacena espacio para el 
+  tipo de dato mas grande.
+
+ Bitfields:
+
+
+ Function pointers: return type(* Pointer variable)(Param types)      */
