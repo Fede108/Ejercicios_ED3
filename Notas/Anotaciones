@@ -1,7 +1,14 @@
 /* scanf:ingreso de valores
 
  PUNTEROS: es una variable que almacena una direccion de memoria 
+     // Declare a pointer to an integer
+    int *ptr;
 
+    // Point the pointer to the first element of the array
+    ptr = array; // Equivalent to ptr = &array[0];
+
+    // Modify array elements using pointers
+    *(ptr + 2) = 100; // Modify the third element of the array
 
 Seminario2:
 Structs , Unions and   Bitfields 
@@ -23,6 +30,28 @@ Structs(structured data types) : permite juntar diferentes tipos de datos
   tipo de dato mas grande.
 
  Bitfields:
+ // Struct with a bitfield to represent status flags
+ // A bitfield is a data structure that allows you to specify the size of each field in bits.
+ // This is useful when you want to pack multiple flags or values into a single memory location.
+ typedef struct
+ {
+    unsigned int isOn : 1;     // 1-bit flag to indicate if a device is on
+    unsigned int hasError : 1; // 1-bit flag to indicate if there's an error
+    unsigned int mode : 2;     // 2-bit field to represent mode (0-3)
+    unsigned int reserved : 4; // 4-bit reserved field (unused)
+ } Status;   
 
 
- Function pointers: return type(* Pointer variable)(Param types)      */
+
+ Function pointers: return type(* Pointer variable)(Param types)      
+ guarda la direccion de memoria de una funcion
+
+ // Declare a function pointer and assign it to the add function
+    // We are assigning the address of the add function to the function pointer
+    int (*func_ptr)(int, int) = add;
+
+    // Use the function pointer to call the add function
+    int result = func_ptr(10, 5);
+
+ 
+ */
