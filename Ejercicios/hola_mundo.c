@@ -23,7 +23,7 @@ int main(void)
 {
     // Print the message "Hello, World!" to the console
     printf("Hello, World!\n");
-    printf("Hello, World!\n");
+    
     // Return 0 to the operating system indicating the program terminated successfully
     return 0;
 }
