@@ -16,7 +16,7 @@
 #define OUTPUT 1
 #define INPUT 0
 #define FALLING 1
-#define MAX_PR_VALUE ((uint32_t)0xFFFFFFF)
+#define MAX_PR_VALUE ((uint32_t)0xFFFFFFFF)
 uint32_t PR_VALUE=1;
 
 /* Prototype Functions */
@@ -66,6 +66,7 @@ void configure_port(void){
     NVIC_EnableIRQ(EINT3_IRQn);
 }
 
+
 void EINT3_Handler(void){
     GPIO_ClearInt(PINSEL_PORT_0, BUTTON);
     if(PR_VALUE < MAX_PR_VALUE){
@@ -74,9 +75,7 @@ void EINT3_Handler(void){
     else{
         PR_VALUE=1;
     }
-
     configure_timer();
-
 }
 
 int main(void)

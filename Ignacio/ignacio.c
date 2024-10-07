@@ -124,9 +124,10 @@ void Confg_Timer(void){
 
 }*/
 
+
 //EJERCICIO 16
 
-
+/*
 #ifdef __USE_CMSIS
 #include "LPC17xx.h"
 #endif
@@ -142,6 +143,7 @@ void Confg_Timer(void){
 #include "lpc17xx_exti.h"
 
 int ValueDiv = 0;
+int ValuePrescaler = 100;
 
 void ConfgTimer(void);
 void ConfgEINT(void);
@@ -156,7 +158,8 @@ void ConfgTimer(void){
 
 TIM_TIMERCFG_Type timcfg;
 timcfg.PrescaleOption = TIM_PRESCALE_USVAL;
-timcfg.PrescaleValue = 100;
+timcfg.PrescaleValue = ValuePrescaler;
+
 
 //Configuro MATCH
 TIM_MATCHCFG_Type matchcfg;
@@ -184,9 +187,9 @@ PINSEL_ConfigPin(&Pincfg);
 
 //Configuro EINT por flanco descendente
 EXTI_InitTypeDef EXTICfg;
-EXTICfg.EXTI_LINE_ENUM = EXTI_EINT1;
-EXTICfg.EXTI_MODE_ENUM = EXTI_MODE_EDGE_SENSITIVE;
-EXTICfg.EXTI_POLARITY_ENUM = EXTI_POLARITY_LOW_ACTIVE_OR_FALLING_EDGE;
+EXTICfg.EXTI_Line = EXTI_EINT1;
+EXTICfg.EXTI_Mode = EXTI_MODE_EDGE_SENSITIVE;
+EXTICfg.EXTI_polarity = EXTI_POLARITY_LOW_ACTIVE_OR_FALLING_EDGE;
 
 EXTI_Config(&EXTICfg);
 EXTI_ClearEXTIFlag(EXTI_EINT1);//LIMPIO BANDERA
@@ -197,18 +200,109 @@ NVIC_EnableIRQ(EINT1_IRQn);//HABILITO INTERRUPCION
 
 //Handler de la interrupcion externa
 void EINT1_IRQHandler(void){
-    if(ValueDiv<3){
-        ClKPWR_SetPCLKDiv(CLKPWR_PCLKSEL_TIMER2,ValueDiv);
-        ValueDiv = ValueDiv + 1;
-    }
-    else{
-        ValueDiv = 0;
-        CLKPWR_SetPCLKDiv(CLKPWR_PCLKSEL_TIMER2,ValueDiv);
-        ValueDiv = ValueDiv + 1; 
-    }
-//Limpio bandera
+
+TIM_TIMERCFG_Type timcfg;
+timcfg.PrescaleOption = TIM_PRESCALE_USVAL;
+
+if(ValuePrescaler<0xFFFFFFFF){
+ValuePrescaler = ValuePrescaler*2;
+timcfg.PrescaleValue = (ValuePrescaler);
+}
+else{
+timcfg.PrescaleValue = 1;
+ValuePrescaler = 1;
+}
+TIM_Init(LPC_TIM2, TIM_TIMER_MODE , (void*) & timcfg );
+
 EXTI_ClearEXTIFlag(EXTI_EINT1);
 }
+*/
+
+//Ejercicio 17
+/*Consigna
+Escribir un programa para que por cada presión de un pulsador, la frecuencia de
+parpadeo disminuya a la mitad debido a la modificación del registro del Match 0. El
+pulsador debe producir una interrupción por EINT2 con flanco descenden
+*/
+
+#ifdef __USE_CMSIS
+#include "LPC17xx.h"
+#endif
+
+#ifdef __USE_MCUEXPRESSO
+#include <cr.section_macros.h>
+#endif
+
+#include "lpc17xx_gpio.h"
+#include "lpc17xx_pinsel.h"
+#include "lpc17xx_timer.h"
+#include "lpc17xx_exti.h"
+
+void ConfPuertos(void);
+void ConfTimer(void);
+void ConfInt(void);
+
+uint32_t valor_matcheo = 100;
+
+int main(void){
+    ConfPuertos();
+    ConfTimer();
+    ConfInt();
+
+while(1){
+}
+}
+
+
+void ConfPuertos(void){
+    PINSEL_CFG_Type PinCfg;
+    
+    PinCfg.Portnum = PINSEL_PORT_2;
+    PinCfg.Funcnum = PINSEL_PIN_12;
+    PinCfg.Pinmode = PINSEL_FUNC_1;
+    PinCfg.Pinmode = PINSEL_PINMODE_PULLUP;
+
+    PINSEL_ConfigPin(&PinCfg);
+}
+
+void ConfTimer(void){
+    TIM_MATCHCFG_Type   TIM_MatchCfg;
+    
+    TIM_MatchCfg.MatchChannel = 0;
+    TIM_MatchCfg.IntOnMatch = ENABLE;
+    TIM_MatchCfg.ResetOnMatch = ENABLE;
+    TIM_MatchCfg.ExtMatchOutputType = TIM_EXTMATCH_TOGGLE;
+    TIM_MatchCfg.MatchValue = valor_matcheo;
+    
+    TIM_Init(LPC_TIM0, TIM_TIMER_MODE, (void*)& TIM_MatchCfg);
+}
+
+void ConfInt(void){
+    EXTI_InitTypeDef EXTICfg;
+    
+    EXTICfg.EXTI_Line = EXTI_EINT2;
+    EXTICfg.EXTI_Mode = EXTI_MODE_EDGE_SENSITIVE;
+    EXTICfg.EXTI_polarity = EXTI_POLARITY_LOW_ACTIVE_OR_FALLING_EDGE;
+    
+    EXTI_Config(&EXTICfg);
+    EXTI_ClearEXTIFlag(EXTI_EINT2);
+
+    NVIC_EnableIRQ(EINT2_IRQn);
+}
+
+void EINT2_IRQHandler(void){
+    //Duplicar el valor de matcheo
+    valor_matcheo = valor_matcheo*2;
+
+    //Actualizar el valor de matcheo
+    TIM_UpdateMatchValue(LPC_TIM0 , 0 , valor_matcheo);
+
+    //Limpiar la bandera de interrupcion
+    EXTI_ClearEXTIFLAG(EXTI_EINT2);
+}
+
+
+
 
 
 
