@@ -1,1 +1,1 @@
-#ifdef __USE_CMSIS
+//Ejercicio 17
