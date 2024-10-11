@@ -49,6 +49,7 @@ void configure_pin (void){
     
     GPIO_SetDir(PINSEL_PORT_1 , PULSADOR_1 , INPUT);
     GPIO_IntCmd(PINSEL_PORT_1 , PULSADOR_1 , FALLING);
+    NVIC_EnableIRQ(EINT3_IRQn);
 }
 
 void TIMER0_IRQHandler (void){

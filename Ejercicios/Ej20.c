@@ -29,7 +29,7 @@ void configure_adc (void){
     pin_cfg.Pinnum    = PINSEL_PIN_26;
     PINSEL_ConfigPin(&pin_cfg);
 
-    ADC_Init(LPC_ADC, ADC_FREQ*NUMBER_OF_CHANNELS); /* Initialize the ADC peripheral with a 50 kHz sampling frequency */
+    ADC_Init(LPC_ADC, ADC_FREQ_FOR_EACH_CHANNEL*NUMBER_OF_CHANNELS); /* Initialize the ADC peripheral with a 50 kHz sampling frequency */
     ADC_BurstCmd(LPC_ADC, ENABLE);/* Enable burst mode*/
     ADC_ChannelCmd(LPC_ADC, ADC_CHANNEL_0, ENABLE); /* Enable ADC channel 0 */
     ADC_ChannelCmd(LPC_ADC, ADC_CHANNEL_1, ENABLE); /* Enable ADC channel 1 */
