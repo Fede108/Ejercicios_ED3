@@ -1,1 +1,208 @@
-//Ejercicio 17
+//Ejercicio 18
+#ifdef __USE_CMSIS
+#include "lpc17xx.h"
+#endif
+
+#ifdef MCU_EXPRESSO
+#include "lpc17xx_pinsel.h"
+#include "lpc17xx_timer.h"
+#include "lpc17xx_exti.h"
+#include "lpc17xx_gpio.h"
+#endif
+
+#define PORT_ZERO ((uint8_t) (0))
+#define PIN_0 ((uint32_t)(1<<0))
+#define PIN_1 ((uint32_t)(1<<1))
+#define PIN_2 ((uint32_t)(1<<2))
+#define PIN_3 ((uint32_t)(1<<3))
+
+uint8_t FLAG = 0;
+
+
+
+//Declaro funciones
+void ConfPuertos(void);
+void ConfInt(void);
+void ConfTimer(void);
+
+int main (void){
+    ConfPuertos();
+    ConfInt();  
+    ConfTimer();
+    while(1){
+    }
+}
+
+void ConfPuertos(void){
+    PINSEL_CFG_Type PinCfg;
+    
+    //Configuro 0.0 GPIO
+    PinCfg.Portnum = PINSEL_PORT_0;
+    PinCfg.Pinnum = PINSEL_PIN_0;
+    PinCfg.Funcnum = PINSEL_FUNC_0;
+    PinCfg.Pinmode = PINSEL_PINMODE_PULLUP;
+    PinCfg.Pinmode = PINSEL_PINMODE_NORMAL;
+    
+    PINSEL_ConfigPin(&PinCfg);
+
+    //Configuro 0.1 GPIO
+    PinCfg.Pinnum = PINSEL_PIN_1;
+    PINSEL_ConfigPin(&PinCfg);
+
+    //Configuro 0.2 GPIO
+    PinCfg.Pinnum = PINSEL_PIN_2;
+    PINSEL_ConfigPin(&PinCfg);
+
+    //Configuro 0.3 GPIO
+    PinCfg.Pinnum = PINSEL_PIN_3;
+    PINSEL_ConfigPin(&PinCfg);
+
+    //2.13 como EINT
+    PinCfg.Portnum = PINSEL_PORT_2;
+    PinCfg.Pinnum = PINSEL_PIN_13;
+    PinCfg.Funcnum = PINSEL_FUNC_1;
+    PinCfg.Pinmode = PINSEL_PINMODE_PULLUP;
+    PINSEL_ConfigPin(&PinCfg);
+
+    //Configuro puertos como salidas
+    GPIO_SetDir(PORT_ZERO,PIN_0 | PIN_1 | PIN_2 | PIN_3  , OUTPUT);
+}
+
+void ConfInt(void){
+    EXTI_InitTypeDef EXTICfg;
+
+    EXTICfg.EXTI_LINE_ENUM = EXTI_EINT3;
+    EXTICfg.EXTI_MODE_ENUM = EXTI_MODE_EDGE_SENSITIVE;
+    EXTICfg.EXTI_POLARITY_ENUM = EXTI_POARITY_LOW_ACTIVE_OR_FALLING_EDGE;
+
+    EXTI_Config(&EXTICfg);
+    EXTI_ClearEXTIFlag(EXTI_EINT3);
+    
+    NVIC_SetPriority(EINT3_IRQn,1);
+    NVIC_EnableIRQ(EINT3_IRQn);
+}
+
+void ConfTimer(void){
+    TIM_TIMERCFG_Type timCfg;
+    timCfg.PrescaleOption = TIM_PRESCALE_USVAL;
+    timCfg.PrescaleValue = 1000;
+
+    TIM_MATCHCFG_Type TIM_MATCHCfg;
+
+    if(FLAG == 0){    
+        TIM_MATCHCfg.MatchChannel = 0;
+        TIM_MATCHCfg.IntOnMatch = ENABLE;
+        TIM_MATCHCfg.ResetOnMatch = DISABLE;
+        TIM_MATCHCfg.StopOnMatch = DISABLE;
+        TIM_MATCHCFG.MatchValue = 5;
+
+        TIM_ConfigMatch(LPC_TIM0, &TIM_MATCHCfg);
+        
+        TIM_MATCHCfg.MatchChannel = 1;
+        TIM_MATCHCFG.MatchValue = 10;
+
+        TIM_ConfigMatch(LPC_TIM0, &TIM_MATCHCfg);        
+
+        TIM_MATCHCfg.MatchChannel = 2;
+        TIM_MATCHCFG.MatchValue = 15;
+
+        TIM_ConfigMatch(LPC_TIM0, &TIM_MATCHCfg);
+
+        TIM_MATCHCfg.MatchChannel = 3;
+        TIM_MATCHCFG.MatchValue = 20;
+
+        TIM_ConfigMatch(LPC_TIM0, &TIM_MATCHCfg);
+    }
+
+    if(FLAG == 1){
+        //Secuencia B
+        
+        TIM_MATCHCfg.MatchChannel = 0;
+        TIM_MATCHCfg.IntOnMatch = ENABLE;
+        TIM_MATCHCfg.ResetOnMatch = DISABLE;
+        TIM_MATCHCfg.StopOnMatch = DISABLE;
+        TIM_MATCHCFG.MatchValue = 2.5;
+
+        TIM_ConfigMatch(LPC_TIM0, &TIM_MATCHCfg);
+
+        TIM_MATCHCfg.MatchChannel = 1;
+        TIM_MATCHCFG.MatchValue = 5;
+
+        TIM_ConfigMatch(LPC_TIM0, &TIM_MATCHCfg);
+
+        TIM_MATCHCfg.MatchChannel = 2;
+        TIM_MATCHCFG.MatchValue = 7.5;
+
+        TIM_ConfigMatch(LPC_TIM0, &TIM_MATCHCfg);
+
+        TIM_MATCHCfg.MatchChannel = 3;
+        TIM_MATCHCFG.MatchValue = 10;
+
+        TIM_ConfigMatch(LPC_TIM0, &TIM_MATCHCfg);
+    }
+
+    TIM_Init(LPC_TIM0, TIM_TIMER_MODE , (void*)&timCfg);
+    TIM_Cmd(LPC_TIM0, ENABLE);
+    NVIC_SetPriority(TIMER0_IRQn,0);
+    NVIC_EnableIRQ(TIMER0_IRQn);
+}
+
+void EINT3_IRQHandler(void){
+    if(FLAG == 0){
+        FLAG = 1;
+        ConfTimer();
+    }
+    if(FLAG == 1){
+        GPIO_SetValue(PORT_ZERO,PIN_0);
+        GPIO_ClearValue(PORT_ZERO, PIN_1 | PIN_2 | PIN_3 );
+        FLAG = 0;
+        ConfTimer();
+    }
+EXTI_ClearEXTIFlag(EXTI_EINT3);
+}
+
+
+void TIMER0_IRQHandler(void){
+    //Secuencia A
+    if(FLAG == 0){
+        if(TIM_GetIntStatus(TIM0,TIM_MR0_INT)){
+            GPIO_ClearValue(PORT_ZERO , PIN_0);
+            GPIO_SetValue(PORT_ZERO, PIN_1);
+        }
+        if(TIM_GetIntStatus(TIM0, TIM_MR1_INT)){
+            GPIO_ClearValue(PORT_ZERO, PIN_1);
+            GPIO_SetValue(PORT_ZERO, PIN_2);
+        }
+        
+        if(TIM_GetIntStatus(TIM0, TIM_MR2_INT)){
+            GPIO_ClearValue(PORT_ZERO, PIN_2);
+            GPIO_SetValue(PORT_ZERO, PIN_3);
+        }
+
+        if(TIM_GetIntStatus(TIM0, TIM_MR3_INT)){
+            GPIO_ClearValue(PORT_ZERO, PIN_3);
+            GPIO_SetValue(PORT_ZERO, PIN_0);
+        }
+    }
+
+    //Secuencia B
+    if(FLAG == 1){
+        if(TIM_GetIntStatus(TIM0,TIM_MR0_INT)){ //A los 2.5ms
+            GPIO_SetValue(PORT_ZERO,PIN_1);
+            GPIO_ClearValue(PORT_ZERO, PIN)
+        }
+        
+        if(TIM_GetIntStatus(TIM0, TIM_MR1_INT)){ //A los 5ms
+            GPIO_ClearValue(PORT_ZERO,PIN_0);
+            GPIO_SetValue(PORT_ZERO,PIN_2);
+        }
+        if(TIM_GetIntStatus(TIM0, TIM_MR2_INT)){ //A los 7.5ms
+            GPIO_ClearValue(PORT_ZERO,PIN_1);
+            GPIO_SetValue(PORT_ZERO,PIN_3);
+        }
+        if(TIM_GetIntStatus(TIM0, TIM_MR3_INT)){ //A los 10ms
+            GPIO_SetValue(PORT_ZERO,PIN_0);
+            GPIO_ClearValue(PORT_ZERO,PIN_2);
+        }
+    }     
+}

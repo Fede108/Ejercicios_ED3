@@ -225,6 +225,7 @@ parpadeo disminuya a la mitad debido a la modificación del registro del Match 0
 pulsador debe producir una interrupción por EINT2 con flanco descenden
 */
 
+/*
 #ifdef __USE_CMSIS
 #include "LPC17xx.h"
 #endif
@@ -251,6 +252,7 @@ int main(void){
 
 while(1){
 }
+return 0;
 }
 
 
@@ -300,9 +302,67 @@ void EINT2_IRQHandler(void){
     //Limpiar la bandera de interrupcion
     EXTI_ClearEXTIFLAG(EXTI_EINT2);
 }
+*/
 
+// EJERCICIO 20
+#ifdef __USE_CMSIS
+#include "LPC17xx.h"
+#endif
 
+#ifdef _USE_MCU_EXPRESSO
+#include<cr.section_macros.h>
+#endif
+#include "lpc17xx_pinsel.h"
+#include "lpc17xx_adc.h"
 
+void ConfPines(void);
+void ConfADC(void);
+
+uint8_t canal = 0;
+uint8_t cont = 0; 
+
+int main(void){
+    ConfPines();
+    ConfADC();
+
+return;
+}
+
+void ConfPines(void){
+    //Configuro pines 0.23 a 0.26 como canales de ADC AD0 a AD3
+    PINSEL_CFG_Type  PinCfg;
+    PinCfg.Portnum = PINSEL_PORT_0;
+    PinCfg.Pinnum = PINSEL_PIN_23;
+    PinCfg.Funcnum = PINSEL_FUNC_1;
+    PINSEL_ConfigPin(&PinCfg);
+
+    PinCfg.Pinnum = PINSEL_PIN_24;
+    PINSEL_ConfigPin(&PinCfg);
+
+    PinCfg.Pinnum = PINSEL_PIN_25;
+    PINSEL_ConfigPin(&PinCfg);
+
+    PinCfg.Pinnum = PINSEL_PIN_26;
+    PINSEL_ConfigPin(&PinCfg);
+}
+
+void ConfADC(void){
+    //Inicializo adc con frecucencia 200k
+    ADC_Init(LPC_ADC,20000);//200kHz
+    ADC_BurstCmd(LPC_ADC,ENABLE); //Habilito modo Burst
+
+    //Habilito los 4 canales AD0 a AD3
+    ADC_ChannelCmd(LPC_ADC, ADC_CHANNEL_0 , ENABLE);
+    ADC_ChannelCmd(LPC_ADC,ADC_CHANNEL_1, ENABLE);
+    ADC_ChannelCmd(LPC_ADC, ADC_CHANNEL_2 , ENABLE);
+    ADC_ChannelCmd(LPC_ADC,ADC_CHANNEL_3, ENABLE);
+    
+    //Configuro inicio
+    ADC_StartCmd(LPC_ADC , ADC_START_NOW);
+
+    //Configuro disparo en flanco ascendente
+    ADC_EdgeStartConfig(LPC_ADC , ADC_START_ON_RISING);
+}
 
 
 
