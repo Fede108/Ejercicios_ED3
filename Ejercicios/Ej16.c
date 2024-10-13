@@ -29,7 +29,7 @@ void configure_timer(void){
     TIM_TIMERCFG_Type timer_struct;
     timer_struct.PrescaleOption = TIM_PRESCALE_USVAL;
     timer_struct.PrescaleValue  = PR_VALUE; //Every PR value the timer will increment by 1
-    TIM_Init(LPC_TIM2, TIM_TIMER_MODE , &timer_struct);
+    TIM_Init(LPC_TIM2, TIM_TIMER_MODE , &timer_struct); //Resetea el TC y PC. Y habilita el temporizador/contador.
 }
 
 void configure_match (void){
