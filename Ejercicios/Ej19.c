@@ -30,7 +30,7 @@ void configure_capture (void){
     capture_cfg.FallingEdge    = ENABLE;
     capture_cfg.IntOnCaption   = ENABLE;
     capture_cfg.RisingEdge     = DISABLE;
-    TIM_ConfigCapture(LPC_TIM_0 , &capture_cfg); 
+    TIM_ConfigCapture(LPC_TIM0 , &capture_cfg); 
 }
 
 void configure_pin (void){
@@ -53,7 +53,7 @@ void configure_pin (void){
 }
 
 void TIMER0_IRQHandler (void){
-    TIM_ClearIntPending(LPC_TIM_0 , TIM_CR0_INT);
+    TIM_ClearIntPending(LPC_TIM0 , TIM_CR0_INT);
     uint32_t capturedValue = TIM_GetCaptureValue(LPC_TIM0, TIM_COUNTER_INCAP0); //counter value in ms
     TIM_Cmd(LPC_TIM0, DISABLE);
     TIM_ResetCounter(LPC_TIM0);

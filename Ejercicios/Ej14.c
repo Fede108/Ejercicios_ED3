@@ -67,7 +67,7 @@ void EINT3_Handler(void){
     GPIO_ClearInt(PINSEL_PORT_0, BUTTON);
     static uint8_t div = 0;
     div = (div < 3) ? div + 1 : 0;  // Incrementar o reiniciar el divisor
-    CLKPWR_SetPCLKDiv(CLKPWR_PCLKSEL_TIMER0, div);  // Actualizar diviso
+    CLKPWR_SetPCLKDiv(CLKPWR_PCLKSEL_TIMER0, div);  // Actualizar divisor
 }
 
 int main(void)

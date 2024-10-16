@@ -23,7 +23,7 @@ uint8_t pulsador = 0;
 void configure_timer (void){
     TIM_TIMERCFG_Type timer_cfg;
     timer_cfg.PrescaleOption = TIM_PRESCALE_USVAL;
-    timer_cfg.PrescaleValue  = 1000; //Clock 100Mhz (1us). Time resolution 1ms 
+    timer_cfg.PrescaleValue  = 1000; //Clock 100Mhz. Time resolution 1us*1000=1ms 
     TIM_Init(LPC_TIM0, TIM_TIMER_MODE, &timer_cfg);
 }
 
@@ -34,7 +34,7 @@ void configure_match (void){
     match_cfg.IntOnMatch         = ENABLE;
     match_cfg.ExtMatchOutputType = TIM_EXTMATCH_NOTHING;
     match_cfg.MatchChannel       = 0;
-    match_cfg.MatchValue         = 5
+    match_cfg.MatchValue         = 5;
     TIM_ConfigMatch(LPC_TIM0, &match_cfg);
 
     match_cfg.MatchChannel = 1;
@@ -57,7 +57,7 @@ void configure_match (void){
 }
 
 void configure_gpio(void){
-    PINSEL_CFG_Type pin_cfg;
+    PINSEL_CFG_Type pin_cfg_struct;
     pin_cfg.Portnum   = PINSEL_PORT_1;
     pin_cfg.Pinnum    = PINSEL_PIN_20; 
     pin_cfg.Funcnum   = PINSEL_FUNC_2;  //Pin config as eint3
@@ -100,7 +100,7 @@ void configure_eint(void){
 
 void EINT3_Handler (void){
     pulsador = !pulsador;
-    GPIO_SetValue(PINSEL_PORT_0 , A_0) //Initial condition
+    GPIO_SetValue(PINSEL_PORT_0 , A_0); //Initial condition
     GPIO_ClearValue(PINSEL_PORT_0 , A_1|B_0|B_1 );
     EXTI_ClearEXTIFlag(EXTI_EINT3);
 }

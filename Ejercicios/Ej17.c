@@ -54,7 +54,7 @@ void configure_eint(void){
 
 void EINT2_IRQHandler(void){
     EXTI_ClearEXTIFlag(EXTI_EINT2);
-    if(match_value==MAX_MATCH_VALUE) ? 1 : match_value*2;
+    match_value = (match_value == MAX_MATCH_VALUE) ? 1 : match_value * 2;
     TIM_UpdateMatchValue(LPC_TIM0, 0, match_value);
 }
 
