@@ -92,12 +92,12 @@ void TIM0_IRQHandler (void){
     {               
         TIM_ClearIntPending(LPC_TIM0 , TIM_CR0_INT);
         if(edge_flag){
-            count_low = TIM_GetCaptureValue(LPC_TIM0 , TIM_COUNTER_INCAP0); /* rising edge */
+            count_low = TIM_GetCaptureValue(LPC_TIM0 , TIM_COUNTER_INCAP0) - (count_high + count_low); /* rising edge */
             sampling_num = (sampling_num < 10) ? sampling_num + 1 : 0; 
             duty_cycle[sampling_num] = count_high*100/(count_high + count_low); /* completed period */
         }       
         else{
-            count_high = TIM_GetCaptureValue(LPC_TIM0 , TIM_COUNTER_INCAP0); /* falling edge */ 
+            count_high = TIM_GetCaptureValue(LPC_TIM0 , TIM_COUNTER_INCAP0) - (count_high + count_low); /* falling edge */ 
         }
         edge_flag = ! edge_flag;        
     }

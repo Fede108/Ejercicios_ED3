@@ -47,6 +47,7 @@ uint32_t count_sampling = 0;
 uint16_t wave[MAX_RESOLUTION] = {};
 
 GPDMA_LLI_Type LLI_Struct1, LLI_Struct2;
+GPDMA_Channel_CFG_Type GPDMA_Struct;
 
 void configure_eint (void){
     PINSEL_CFG_Type pin_cfg;
@@ -103,24 +104,14 @@ void configure_dac (void){
     DAC_SetDMATimeOut(LPC_DAC , count_sampling);
 }
 
-
-void configure_dma (void)
-{
-    GPDMA_LLI_Type LLI_Struct1, LLI_Struct2;
-
+void configure_chanel0 (void){
+ 
     /* Adc continuos conversion transfer */
     LLI_Struct1.DstAddr = (uint32_t) &adc_buffer;
     LLI_Struct1.SrcAddr = (uint32_t) & (LPC_ADC->ADDR0);
     LLI_Struct1.Control = TRANSFER_SIZE | (1<<27);  
                         /*TransferSize     Increment destination address*/               
     LLI_Struct1.NextLLI = (uint32_t) &LLI_Struct1;
-
-    /* DAC wave output */
-    LLI_Struct2.DstAddr = (uint32_t) & (LPC_DAC->DACR); 
-    LLI_Struct2.SrcAddr = (uint32_t) &dac_buffer;
-    LLI_Struct2.Control = TRANSFER_SIZE  | (1<<26);
-                        /*TransferSize    Increment source address*/
-    LLI_Struct2.NextLLI = (uint32_t) &LLI_Struct2;
 
     GPDMA_Init(); /* Initialize the dma module */
 
@@ -136,21 +127,33 @@ void configure_dma (void)
     GPDMA_Struct.DstMemAddr    = (uint32_t) &adc_buffer;
     GPDMA_Struct.DMALLI        = (uint32_t) &LLI_Struct1;       
     GPDMA_Setup(&GPDMA_Struct);
+    GPDMA_ChannelCmd (0 , ENABLE); /*  normal operation starts */
+}
+
+void configure_chanel1 (uint32_t *buffer)
+{
+    GPDMA_ChannelCmd (1 , DISABLE);
+    /* DAC wave output */
+    LLI_Struct2.DstAddr = (uint32_t) & (LPC_DAC->DACR); 
+    LLI_Struct2.SrcAddr = (uint32_t)buffer;
+    LLI_Struct2.Control = TRANSFER_SIZE  | (1<<26);
+                        /*TransferSize    Increment source address*/
+    LLI_Struct2.NextLLI = (uint32_t) &LLI_Struct2;
+
+    GPDMA_Init(); /* Initialize the dma module */
 
     /* Chanel 1 for DAC playback */
-    GPDMA_Channel_CFG_Type GPDMA_Struct;
     GPDMA_Struct.ChannelNum    = 1; /* transfer every 1us, lower level priority*/
     GPDMA_Struct.TransferType  = GPDMA_TRANSFERTYPE_M2P;
     GPDMA_Struct.TransferSize  = TRANSFER_SIZE;
     GPDMA_Struct.TransferWidth = 0; // Not used. Used for TransferType is GPDMA_TRANSFERTYPE_M2M only 
     GPDMA_Struct.SrcConn       = 0;
-    GPDMA_Struct.SrcMemAddr    = (uint32_t) &dac_buffer ;
+    GPDMA_Struct.SrcMemAddr    = (uint32_t)buffer;
     GPDMA_Struct.DstConn       = (uint32_t) & (LPC_DAC->DACR);
     GPDMA_Struct.DstMemAddr    = 0;
     GPDMA_Struct.DMALLI        = (uint32_t) &LLI_Struct2;       
     GPDMA_Setup(&GPDMA_Struct);
 
-    GPDMA_ChannelCmd (0 , ENABLE); /*  normal operation starts */
     GPDMA_ChannelCmd (1 , ENABLE);
 }
 
@@ -179,13 +182,16 @@ void EINT1_IRQn (void){
     if(flag){
         ADC_ChannelCmd(LPC_ADC , ADC_CHANNEL_0 , ENABLE);
         GPDMA_ChannelCmd (0 , ENABLE);
+        configure_chanel1(dac_buffer);
     }
     else {
+        while(!ADC_ChannelGetStatus(LPC_ADC, ADC_CHANNEL_0, ADC_DATA_DONE))
         ADC_ChannelCmd(LPC_ADC , ADC_CHANNEL_0 , DISABLE);
         GPDMA_ChannelCmd (0 , DISABLE);
         for (uint16_t i = 0; i<TRANSFER_SIZE ; i++){
-            dac_buffer[i] = (adc_buffer[i] >> 4) & 0xFFF; // Shift rigth keep adc result only
-            dac_buffer[i] <<= 6; // Shift left to align with DAC register format
+            adc_buffer[i] = (adc_buffer[i] >> 4) & 0xFFF; // Shift rigth keep adc result only
+            adc_buffer[i] <<= 6; // Shift left to align with DAC register format
+            configure_chanel1(adc_buffer);
         }  
     }
     flag = ! flag;
