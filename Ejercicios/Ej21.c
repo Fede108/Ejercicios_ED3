@@ -1,3 +1,22 @@
+/**
+ * @file Ej21.c
+ * @author your name (you@domain.com)
+ * @brief Realizar un código en C que permita filtrar las muestras provenientes del ADC con
+        un filtro promediador móvil de N muestras, donde N inicialmente es igual a 2 y
+        puede ser incrementado en dos unidades cada vez que se presiona un pulsador
+        conectado en P0.6 hasta llegar a un valor de 600. A su vez, utilizando el bit de
+        overrun y un timer, complete el código realizado para que en caso de producirse el
+        evento de pérdida de datos por parte del ADC, se deje de muestrear y se saque por
+        el pin MATCH2.1 una señal cuadrada de 440 Hz. Considerar una frecuencia de cclk
+        de 60 Mhz y configurar el ADC para obtener una frecuencia de muestreo de 5
+        Kmuestras/seg.
+ * @version 0.1
+ * @date 2024-10-18
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
 #ifdef __USE_CMSIS
 #include "LPC17xx.h"
 #endif
@@ -88,6 +107,7 @@ void Eint3_IRQHandler(void){
 
 void ADC_IRQHandler (void){
 
+    data = 0; /* Last input analog data is delete */
     NVIC_Disable(ADC_IRQn); /*Nvic disable allows to get data of N sampling in 1 interruption*/
     for(uint16_t i=0; i<N ; i++){
         while (!(ADC_ChannelGetStatus(LPC_ADC, ADC_CHANNEL_0, ADC_DATA_DONE))); /* Wait for the ADC conversion to finish */
@@ -106,3 +126,54 @@ void ADC_IRQHandler (void){
     NVIC_Enable(ADC_IRQn);
 
 }
+
+void ADC_IRQHandler (void){
+        static uint32_t samples_num = 0;
+        if (ADC_ChannelGetStatus(LPC_ADC, ADC_CHANNEL_0, ADC_DATA_BURST)) /* Check overrun bit*/
+        {
+            ADC_DeInit(LPC_ADC); /* Close ADC */
+            configure_timer_and_match();
+            NVIC_Disable(ADC_IRQn);
+            
+        }
+        else if (samples_num < N)
+            {
+            data += ADC_ChannelGetData(LPC_ADC , ADC_CHANNEL_0); /* DONE is negated when ADDR is read, flag is cleared */
+            samples_num++;
+            }
+            else{
+                promedio=(data/N);
+                samples_num = 0;
+                data=0;
+            }
+}
+
+void TIM0_IRQHandler (void){
+    static uint8_t edge_flag = 0; /*pin pull-up, first interruption will be a falling edge (high cycle)*/
+    static uint8_t sampling_num = 0;
+    if (TIM_GetIntStatus(LPC_TIM0 , TIM_CR0_INT))
+    {               
+        TIM_ClearIntPending(LPC_TIM0 , TIM_CR0_INT);
+        if(edge_flag){
+            count_low = TIM_GetCaptureValue(LPC_TIM0 , TIM_COUNTER_INCAP0); /* rising edge */
+            sampling_num = (sampling_num < 10) ? sampling_num++ : 0; 
+            duty_cycle[sampling_num] = count_high*100/(count_high + count_low); /* completed period */
+        }       
+        else{
+            count_high = TIM_GetCaptureValue(LPC_TIM0 , TIM_COUNTER_INCAP0); /* falling edge */ 
+        }
+        edge_flag = ! edge_flag;        
+    }
+    if (TIM_GetIntStatus(LPC_TIM0 , TIM_MR0_INT))
+    {
+        TIM_ClearIntPending(LPC_TIM0 , TIM_MR0_INT);
+        for (uint8_t i = 0; i < N; i++)
+        {       
+            promedio = duty_cycle[i] + promedio;
+        }
+        promedio = promedio/N;                 
+    }
+
+}
+
+

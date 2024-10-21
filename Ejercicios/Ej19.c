@@ -1,3 +1,15 @@
+/**
+ * @file Ej19.c
+ * @author your name (you@domain.com)
+ * @brief Utilizando el modo Capture, escribir un código en C para que guarde en una
+        variable ,llamada "shooter", el tiempo (en milisegundos) que le lleva a una persona
+        presionar dos pulsadores con un único dedo.
+ * @version 0.1
+ * @date 2024-10-18
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #ifdef __USE_CMSIS
 #include "LPC17xx.h"
 #endif

@@ -1,3 +1,19 @@
+/**
+ * @file Ej18.c
+ * @author your name (you@domain.com)
+ * @brief Utilizando los 4 registros match del Timer 0 y las salidas P0.0, P0.1, P0.2 y P0.3,
+        realizar un programa en C que permita obtener las formas de ondas adjuntas,
+        donde los pulsos en alto tienen una duración de 5 mseg. Un pulsador conectado a
+        la entrada EINT3, permitirá elegir entre las dos secuencias mediante una rutina de
+        servicio a la interrupción. La prioridad de la interrupción del Timer tiene que ser
+        mayor que la del pulsador. Estas formas de ondas son muy útiles para controlar un
+        motor paso a paso.
+ * @version 0.1
+ * @date 2024-10-18
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #ifdef __USE_CMSIS
 #include "LPC17xx.h"
 #endif

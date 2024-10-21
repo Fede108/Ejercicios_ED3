@@ -1,3 +1,15 @@
+/**
+ * @file Ej20.c
+ * @author your name (you@domain.com)
+ * @brief Configurar 4 canales del ADC para que funcionando en modo burst se obtenga una
+    frecuencia de muestreo en cada uno de 50Kmuestras/seg. Suponer un cclk = 100
+    Mhz
+ * @version 0.1
+ * @date 2024-10-18
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #ifdef __USE_CMSIS
 #include "LPC17xx.h"
 #endif
