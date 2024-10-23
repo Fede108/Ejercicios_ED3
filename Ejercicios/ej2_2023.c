@@ -107,7 +107,7 @@ void configure_dac (void){
 void configure_chanel0 (void){
  
     /* Adc continuos conversion transfer */
-    LLI_Struct1.DstAddr = (uint32_t) &adc_buffer;
+    LLI_Struct1.DstAddr = (uint32_t) adc_buffer;
     LLI_Struct1.SrcAddr = (uint32_t) & (LPC_ADC->ADDR0);
     LLI_Struct1.Control = TRANSFER_SIZE | (1<<27);  
                         /*TransferSize     Increment destination address*/               
@@ -124,7 +124,7 @@ void configure_chanel0 (void){
     GPDMA_Struct.SrcConn       = GPDMA_CONN_ADC;
     GPDMA_Struct.SrcMemAddr    = 0;
     GPDMA_Struct.DstConn       = 0;
-    GPDMA_Struct.DstMemAddr    = (uint32_t) &adc_buffer;
+    GPDMA_Struct.DstMemAddr    = SRAM_ADC_BASE;
     GPDMA_Struct.DMALLI        = (uint32_t) &LLI_Struct1;       
     GPDMA_Setup(&GPDMA_Struct);
     GPDMA_ChannelCmd (0 , ENABLE); /*  normal operation starts */

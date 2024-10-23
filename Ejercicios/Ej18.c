@@ -74,11 +74,11 @@ void configure_match (void){
 
 void configure_gpio(void){
     PINSEL_CFG_Type pin_cfg_struct;
-    pin_cfg.Portnum   = PINSEL_PORT_1;
-    pin_cfg.Pinnum    = PINSEL_PIN_20; 
-    pin_cfg.Funcnum   = PINSEL_FUNC_2;  //Pin config as eint3
-    pin_cfg.OpenDrain = PINSEL_PINMODE_NORMAL;
-    pin_cfg.Pinmode   = PINSEL_PINMODE_PULLDOWN;
+    pin_cfg_struct.Portnum   = PINSEL_PORT_1;
+    pin_cfg_struct.Pinnum    = PINSEL_PIN_20; 
+    pin_cfg_struct.Funcnum   = PINSEL_FUNC_2;  //Pin config as eint3
+    pin_cfg_struct.OpenDrain = PINSEL_PINMODE_NORMAL;
+    pin_cfg_struct.Pinmode   = PINSEL_PINMODE_PULLDOWN;
     PINSEL_ConfigPin(&pin_cfg_struct);
 
     pin_cfg_struct.Portnum   = PINSEL_PORT_0;
