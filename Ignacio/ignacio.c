@@ -132,7 +132,6 @@ void Confg_Timer(void){
 
 }*/
 
-
 //EJERCICIO 16
 
 /*
@@ -839,7 +838,7 @@ void DutyCycle(void){
 */
 
 
-EJERCICIO 2 PARCIAL
+/*EJERCICIO 2 PARCIAL
 
 #ifdef __USE_CMSIS
 #include<LPC17xx.h>
@@ -859,15 +858,17 @@ void ConfDMA_ADC(void);
 void ConfDMA_DAC(void);
 void generaronda(void);
 
-/*Globales y defines*/
+//Globales y defines
+
 #define PCLK_DAC 20
 #define FREC_SENOIDAL 32000
 #define DMA_SIZE 10
 #define FLAG = 1
 #define BANK0_MITAD1 0x2007C000
 #define BANK0_MITAD2 0x2007E000
+uint16_t *mitad1 = (uint16_t*)BANK0_MITAD1;
 uint16_t*samples = (uint16_t*)BANK0_MITAD2;
-uint16_t muestras = 0;
+uint16_t muestras = 512;
 
 
 
@@ -884,25 +885,28 @@ int main(void){
     while(1){}
 }
 
+
 void generaronda(void){
     //la debo reproducir por el dac
     //Hago linked list de la segunda mitad del banco 0 al final
     //segunda mitad del banco 0 = 0x2007E000 - 0x2007FFFF
     
-    /*Genero primera mitad de onda*/
+    //Genero primera mitad de onda
+
     for(int i = 0; i<2048; i++){
-        *samples = muestras;//Lo referencio, le cargo el valor
-        muestras = muestras + 4;
+        muestras = muestras + 1;
         for(int j=0;j<4;j++){
+            *samples = muestras;//Lo referencio, le cargo el valor
             samples = samples + 1;//Lo desreferencio, estoy apuntando a la posicion y no al valor
         }
     }
 
-    /*Genero segunda mitad de onda*/
+    //Genero segunda mitad de onda
+
     for(int i = 2048; i<4096; i++){
-        *samples = muestras;//Lo referencio, le cargo el valor
-        muestras = muestras + 4;
+        muestras = muestras + 1;
         for(int j=0;j<4;j++){
+            *samples = muestras;//Lo referencio, le cargo el valor
             samples = samples + 1;//Lo desreferencio, estoy apuntando a la posicion y no al valor
         }    
     }  
@@ -950,11 +954,11 @@ void ConfDMA_ADC(void){
     //Preparo estructura
     GPDMA_LLI_Type GPDMA_LLI;
    
-    GPDMA_LLI.SrcAddr = (uint32_t) &(LPC_ADC -> ADRR0); //apunto al adc
+    GPDMA_LLI.SrcAddr = (uint32_t) & (LPC_ADC -> ADRR0); //apunto al adc
     GPDMA_LLI.DstAddr = 0x2007C000;
     GPDMA_LLI.NextLLI = &GPDMA_LLI;
     GPDMA_LLI.Control = DMA_SIZE
-                        | (1<<27) | |(1<<21)|(1<<18);//dest increment, 16b src, 16b dst
+                        | (1<<27) | (1<<21)|(1<<18);//dest increment, 16b src, 16b dst
     //destino no se incrementa, por lo tanto destino increment= 0
     
     //Inicializo
@@ -986,10 +990,10 @@ void confDMA_DAC(void){
     GPDMALLI.SrcAddr = BANK0_MITAD2;
     GPDMALLI.DstAddr = (uint32_t) & (LPC_DAC -> DACR);//DAC
     GPDMALLI.NextLLI = &GPDMA_LLI;
-    GPDMALLI.Control = DMA_SIZE /*largo de los datos*/
+    GPDMALLI.Control = DMA_SIZE //largo de los datos
                        |(1<<26)|(1<<21)|(1<<18);//src incr,src 16b,dst 16b,  
 
-    GPDMA_Init();// Inicializo
+   // GPDMA_Init();// Inicializo
 
 
     //del dma al dac
@@ -1023,6 +1027,11 @@ void DMA_DAC1(void){//Lo de la primera mitad del banco lo saco por el dac
     GPDMA_ChannelCmd(1 , DISABLE);
     GPDMA_LLI_Type GPDMA_LLI;
     
+    for(int i= 0;i<4096;i++){
+        *mitad1 = (*mitad1 << 2);
+        mitad1++;
+    }
+
     GPDMA_LLI.SrcAddr = BANK0_MITAD1;
     GPDMA_LLI.DstAddr = (uint32_t)(LPC_DAC -> DACR);
     GPDMA_LLI.NextLLI = &GPDMAChanCfg;
@@ -1062,5 +1071,199 @@ void EINT0_IRQHandler(void){
     }
     FLAGG = !FLAG;
 }
+*/
+
+/*EJERCICIP 1 REC 2023
+
+
+uint16_t muestras[3];
+uint16_t prom;
+uint16_t sum = 0;
+float t_alto = 0;
+float t_total = 0;
+float t_bajo = 0;
+float DC
+
+void confTMR2(void);
+void CalcTiempos(void);
+
+void ADC_Handler(void){
+    uint8_t ptr = 0;
+    if(ptr<4){
+        muestras[ptr] = ADC_ChannelGetData;
+        ptr++;
+    }
+    else{
+        ptr = 0;
+    }
+}
+
+void TIMER0_IRQHandler{
+    for(int i=0;i<4;i++){
+        sum = muestras[i] + sum;
+    }
+    prom = (sum/4);
+    if(prom<1365){
+        GPIO_ClearValue();
+    }
+    else if(prom>2482){
+        GPIO_SetValue();
+    }
+
+    else if(1365<= prom <=2482){
+        CalcTiempos();
+        confTMR2();
+    }
+}
+
+void CalcTiempos(){
+    DC = (prom)/2482;
+    t_alto = DC*50;
+    t_total = 50;
+    t_bajo = t_total - t_alto 
+}
+
+void confTMR2(){
+    TIM_TIMERCFG_Type timcfg;
+    timcfg.PrescaleOption = TIM_PRESCALE_US;
+    timcfg.PrescaleValue = 1;
+
+    TIM_MATCHCFG_Type matchcfg;
+    matchcfg.MatchChannel = 0;
+    matchcfg.IntOnMatch = ENABLE;
+    matchcfg.MatchValue = t_alto;
+
+    TIM_Init(LPC_TIM2 , TIM_TIMER_MODE , &timcfg);
+    TIM_ConfigMatch(LPC_TIM0 , &matchcfg);
+
+    matchcfg.MatchChannel = 1;
+    matchcfg.IntOnMatch = ENABLE;
+    matchcfg.MatchValue = t_bajo;
+    TIM_ConfigMatch(LPC_TIM2 , &matchcfg);
+    TIM_Cmd(LPC_TIM2, ENABLE);
+
+    NVIC_Enable(TIMER2_IRQn);
+}
+
+void TIMER2_IRQHandler(){
+    if(TIM_GetIntStatus(LPC_TIM2 , TIM_MR0_INT)){
+        GPIO_ClearValue();
+    }
+    else if(TIM_GetIntStatus(LPC_TIM2 , TIM_MR1_INT)){
+        GPIO_SetValue();
+    }
+}
+*/
+
+/*EJERCICIO 2 REC 2023
+
+#define DIRECCION_BLOQUE_0
+#define DIRECCION_BLOQUE_1
+#define DIRECCION_BLOQUE_2
+#define CCLK_IN_MHZ
+#define N_MUESTRAS 1024
+
+uint8_t continterr = 0;
+
+void confEINT(void);
+void confDMA(void);
+void confDAC(void);
+
+
+void confEINT(void){
+    EXTI_InitTypeDef EXTICfg;
+
+    EXTICfg.EXTI_Line = EXI_EINT1;
+    EXTICfg.EXTI_Mode = EXTI_MODE_LEVEL_SENSITIVE;
+    EXTICfg.EXTI_Polarity = EXTI_POLARITY_LOW_ACTIVE_OR_FALLING_EDGE;
+    EXTI_Config(&EXTICfg);
+
+    EXTI_Init();
+}
+
+void confDMA(void){
+
+    GPDMA_Init();
+
+    GPDMA_Channel_CFG_Type GPDMA_ChanCfg;
+    GPDMA_ChanCfg.ChannelNum = 0;
+    GPDMA_ChanCfg.TransferSize = N_MUESTRAS;
+    GPDMA_ChanCfg.TransferWidth = 0;
+    GPDMA_ChanCfg.SrcMemAddr = DIRECCION_BLOQUE_0;
+    GPDMA_ChanCfg.TransferType = GPDMA_TRANSFERTYPE_M2P;
+    GPDMA_ChanCfg.DstConn = GPDMA_CONN_DAC;
+    GPDMA_ChanCfg.DMALLI = 0;
+}
+
+void ConfDAC(void){
+    DAC_Init(LPC_DAC); //Cclk /4
+    DAC_SetBias(LPC_DAC , 0);//BIAS = 0
+    
+}
+
+void EINT1_IRQHandler(void){
+    cont_interr = cont_interr++;
+
+    if(cont_interr){//es uno forma de onda 0
+        DAC_UpdateValue(LPC_DAC , 120000);
+        
+        update_interval = (CCLK_IN_MHZ* 1000000)/(120000*N_MUESTRAS);
+        DAC_SetDMATimeOut(LPC_DAC , update_interval);
+
+        GPDMA_ChannelCmd(0 , ENABLE);
+        GPDMA_ChannelCmd(1, DISABLE);
+        GPDMA_ChannelCmd(2, DISABLE);
+
+        confDMA();   
+        GPDMA_Setup(&GPDMA_ChanCfg); 
+    }
+    else if(cont_interr == 2){//forma de onda 1
+        DAC_UpdateValue(LPC_DAC, 2400000);
+
+        update_interval = (CCLK_IN_MHZ* 1000000)/(240000*N_MUESTRAS);
+        DAC_SetDMATimeOut(LPC_DAC , update_interval);
+
+        
+        GPDMA_ChannelCmd(0 , DISABLE);
+        GPDMA_ChannelCmd(1, ENABLE);
+        GPDMA_ChannelCmd(2, DISABLE);
+
+        confDMA();
+        GPDMA_ChanCfg.ChannelNum = 1;
+        GPDMA_ChanCfg.SrcMemAddr = DIRECCION_BLOQUE_1;
+        GPDMA_Setup(&GPDMA_ChanCfg);
+
+    }
+    else if(cont_interr == 3){//forma de onda 0 y 2
+        DAC_UpdateValue(LPC_DAC, 900000);
+
+        update_interval = (CCLK_IN_MHZ* 1000000)/(900000*N_MUESTRAS);
+        DAC_SetDMATimeOut(LPC_DAC , update_interval);
+
+        GPDMA_ChannelCmd(0 , ENABLE);
+        GPDMA_ChannelCmd(1, DISABLE);
+        GPDMA_ChannelCmd(2, ENABLE);
+
+        GPDMA_LLI_Type GPDMA_LLI;
+        GPDMA_LLI.SrcAddr = DIRECCION_BLOQUE_2;
+        GPDMA_LLI.DstAddr = (uint32_t) & (LPC_DAC -> DACR);
+        GPDMA_LLI.NextLLI = &GPDMA_ChanCfg;
+        GPDMA_LLI.Control = N_MUESTRAS | (2<<21) | (2<<18)|(1<<27);//incr src, dst no
+        
+        confDMA();
+        GPDMA_ChanCfg.DMALLI = GPDMA_LLI;
+        GPDMA_Setup(&GPDMA_ChanCfg); 
+
+
+        cont_interr = 0;
+    }
+*/
+    
+
+//Ejercicios primer parcial
+
+
+
+    
 
 
